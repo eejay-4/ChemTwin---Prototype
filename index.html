@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ChemTwin Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep:#0B3D2E; --deep2:#0F5138; --teal:#1C7293; --amber:#E8912D; --amber-bg:#FBEEDD;
+    --lime:#6FAE7C; --lime-bg:#E9F3EA; --red:#C1512D; --red-bg:#F7E7E0;
+    --paper:#F7F5EF; --panel:#FFFFFF; --ink:#16241E; --mute:#647267; --line:#E3E0D6;
+    --serif:'IBM Plex Serif', Georgia, serif; --sans:'IBM Plex Sans', Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --paper:#10201A; --panel:#16302A; --ink:#E8F1EB; --mute:#9AB3A6; --line:#274B3F; --amber-bg:#3A2E1C; --lime-bg:#1B3527; --red-bg:#3A241C; }
+  }
+  :root[data-theme="dark"] { --paper:#10201A; --panel:#16302A; --ink:#E8F1EB; --mute:#9AB3A6; --line:#274B3F; --amber-bg:#3A2E1C; --lime-bg:#1B3527; --red-bg:#3A241C; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1180px; margin:0 auto; padding:30px 28px 60px; }
+
+  header { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:14px; border-bottom:1px solid var(--line); padding-bottom:16px; margin-bottom:8px; }
+  .brand { font-family:var(--serif); font-weight:600; font-size:22px; color:var(--deep); }
+  @media (prefers-color-scheme: dark){ .brand{color:var(--lime);} }
+  :root[data-theme="dark"] .brand{color:var(--lime);}
+  .plant { font-size:13.5px; color:var(--mute); margin-top:3px; }
+  .badge { font-size:11px; color:var(--mute); }
+
+  nav { display:flex; gap:6px; margin:18px 0 26px; border-bottom:1px solid var(--line); }
+  .tabbtn { font-family:var(--sans); font-size:13px; font-weight:500; color:var(--mute); background:none; border:none; padding:10px 4px; margin-right:22px; cursor:pointer; border-bottom:2px solid transparent; }
+  .tabbtn.active { color:var(--deep); border-bottom-color:var(--amber); font-weight:600; }
+  @media (prefers-color-scheme: dark){ .tabbtn.active{color:var(--lime);} }
+  :root[data-theme="dark"] .tabbtn.active{color:var(--lime);}
+  .view { display:none; }
+  .view.active { display:block; }
+
+  h2 { font-family:var(--serif); font-size:16.5px; font-weight:600; margin:0 0 4px; }
+  .sec-sub { font-size:12px; color:var(--mute); margin-bottom:14px; }
+
+  /* ---- dashboard view ---- */
+  .hero { display:flex; align-items:baseline; gap:40px; flex-wrap:wrap; margin-bottom:6px; }
+  .hero-num { font-family:var(--serif); font-size:64px; font-weight:700; color:var(--deep); line-height:1; }
+  @media (prefers-color-scheme: dark){ .hero-num{color:var(--lime);} }
+  :root[data-theme="dark"] .hero-num{color:var(--lime);}
+  .hero-label { font-size:13px; color:var(--mute); max-width:220px; line-height:1.45; }
+  .hero-stats { display:flex; gap:30px; margin-left:auto; flex-wrap:wrap; }
+  .hstat-n { font-family:var(--serif); font-size:20px; font-weight:600; }
+  .hstat-l { font-size:11px; color:var(--mute); margin-top:2px; max-width:130px; line-height:1.35; }
+  .hero-note { font-size:11px; color:var(--mute); margin:8px 0 26px; font-style:italic; }
+
+  .grid { display:grid; grid-template-columns:1.55fr 1fr; gap:30px; align-items:start; }
+  @media (max-width:860px){ .grid{grid-template-columns:1fr;} }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { text-align:left; font-weight:500; color:var(--mute); font-size:10.5px; padding:0 8px 7px; border-bottom:1px solid var(--line); }
+  td { padding:8px; border-bottom:1px solid var(--line); }
+  tr.row { border-left:3px solid transparent; }
+  tr.row.status-normal{border-left-color:var(--lime);} tr.row.status-watch{border-left-color:var(--amber);} tr.row.status-flagged{border-left-color:var(--red);}
+  .idx{font-family:var(--serif);font-weight:600;}
+  .pill{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:500;}
+  .pill.normal{background:var(--lime-bg);color:#3E6B49;} .pill.watch{background:var(--amber-bg);color:#8A5A15;} .pill.flagged{background:var(--red-bg);color:#93381A;}
+
+  .rec { border-left:3px solid var(--teal); padding:10px 12px; margin-bottom:10px; background:var(--panel); }
+  .rec.high{border-left-color:var(--red);}
+  .rec-title{font-size:12px;font-weight:600;margin-bottom:2px;}
+  .rec-body{font-size:11px;color:var(--mute);line-height:1.5;}
+  .emit{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);}
+  .emit-num{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--deep2);}
+  @media (prefers-color-scheme: dark){ .emit-num{color:var(--lime);} }
+  :root[data-theme="dark"] .emit-num{color:var(--lime);}
+  .emit-label{font-size:11px;color:var(--mute);margin-top:3px;line-height:1.5;}
+
+  /* ---- how it works view ---- */
+  .pipeline{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .stage{flex:1;min-width:200px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--teal);padding:14px;}
+  .stage.physics{border-top-color:var(--mute);} .stage.anomaly{border-top-color:var(--amber);} .stage.cluster{border-top-color:var(--deep2);}
+  .stage-eyebrow{font-size:10px;color:var(--mute);margin-bottom:5px;}
+  .stage-title{font-family:var(--serif);font-weight:600;font-size:13.5px;margin-bottom:6px;}
+  .stage-body{font-size:11px;color:var(--mute);line-height:1.5;}
+
+  .example{display:grid;grid-template-columns:1.3fr 1fr;gap:26px;margin:28px 0;}
+  @media (max-width:860px){.example{grid-template-columns:1fr;}}
+  .compare-row{margin-bottom:14px;}
+  .compare-label{font-size:11px;color:var(--mute);margin-bottom:4px;display:flex;justify-content:space-between;}
+  .compare-track{background:var(--line);height:20px;position:relative;}
+  .compare-fill{height:100%;display:flex;align-items:center;padding-left:8px;font-size:10px;color:white;font-weight:500;}
+  .attrib-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .attrib-label{width:170px;font-size:11px;flex-shrink:0;}
+  .attrib-track{flex:1;background:var(--line);height:13px;}
+  .attrib-fill{height:100%;}
+  .attrib-val{width:44px;font-size:10.5px;color:var(--mute);text-align:right;flex-shrink:0;}
+  .verdict{background:var(--red-bg);border-left:3px solid var(--red);padding:12px 14px;margin-top:14px;font-size:11.5px;color:#7A3319;line-height:1.6;}
+  .model-card{background:var(--deep);color:white;padding:20px;}
+  .model-card h3{font-family:var(--serif);font-size:14px;margin:0 0 12px;color:var(--lime);}
+  .mrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1E4E3C;font-size:11.5px;}
+  .mrow:last-child{border-bottom:none;}
+  .mrow span:first-child{color:#A9D8B6;}
+  .mrow span:last-child{font-weight:600;text-align:right;}
+  .maturity{margin-top:16px;}
+  .maturity-label{font-size:10.5px;color:#A9D8B6;margin-bottom:5px;}
+  .maturity-track{background:#1E4E3C;height:9px;}
+  .maturity-fill{height:100%;background:var(--amber);}
+  .maturity-note{font-size:10px;color:#A9D8B6;margin-top:7px;line-height:1.5;}
+
+  /* ---- try it view ---- */
+  .calc-wrap{display:grid;grid-template-columns:1fr 1fr;gap:30px;}
+  @media (max-width:860px){.calc-wrap{grid-template-columns:1fr;}}
+  .op-toggle{display:flex;gap:8px;margin-bottom:18px;}
+  .op-btn{flex:1;padding:10px;text-align:center;font-size:12.5px;font-weight:500;border:1px solid var(--line);background:var(--panel);cursor:pointer;color:var(--mute);}
+  .op-btn.active{background:var(--deep);color:white;border-color:var(--deep);}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:11.5px;color:var(--mute);margin-bottom:4px;}
+  .field input{width:100%;padding:8px 10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-family:var(--sans);font-size:13px;}
+  .calc-btn{width:100%;padding:12px;background:var(--amber);color:white;border:none;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:6px;}
+  .calc-btn:hover{opacity:0.92;}
+  .result-panel{background:var(--panel);border:1px solid var(--line);padding:20px;min-height:280px;}
+  .result-placeholder{color:var(--mute);font-size:12.5px;font-style:italic;padding-top:40px;text-align:center;}
+  .result-num{font-family:var(--serif);font-size:34px;font-weight:700;}
+  .result-status{display:inline-block;padding:4px 12px;font-size:12px;font-weight:600;border-radius:3px;margin:10px 0;}
+
+  footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--mute);font-style:italic;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">ChemTwin</div>
+      <div class="plant">Anand Dyechem Pvt. Ltd. &middot; GIDC Ankleshwar &middot; Prototype</div>
+    </div>
+    <div class="badge">Schneider Electric Yuva Yodha Tech Energy Hackathon &middot; Smart Manufacturing</div>
+  </header>
+
+  <nav>
+    <button class="tabbtn active" data-tab="dash">Dashboard</button>
+    <button class="tabbtn" data-tab="how">How It Works</button>
+    <button class="tabbtn" data-tab="try">Try It Yourself</button>
+  </nav>
+
+  <!-- ============ DASHBOARD VIEW ============ -->
+  <div class="view active" id="view-dash">
+    <div class="hero">
+      <div>
+        <div class="hero-num">1.15&times;</div>
+        <div class="hero-label">specific energy index &mdash; actual energy divided by the calculated theoretical minimum, blended across the batches below.</div>
+      </div>
+      <div class="hero-stats">
+        <div><div class="hstat-n">2 of 9</div><div class="hstat-l">batches flagged for review</div></div>
+        <div><div class="hstat-n">&#8377;2,550</div><div class="hstat-l">avoidable cost, at Ankleshwar's own &#8377;3.8/kWh tariff</div></div>
+        <div><div class="hstat-n">301 kg</div><div class="hstat-l">CO&#8322;e avoidable, at 0.45 kg/kWh blended factor</div></div>
+      </div>
+    </div>
+    <div class="hero-note">Figures below are illustrative synthetic data built for this prototype &mdash; the "Try It Yourself" tab runs the real calculation engine on numbers you enter.</div>
+
+    <div class="grid">
+      <div>
+        <h2>Batches this week</h2>
+        <div class="sec-sub">Baseline is the calculated theoretical minimum; index is actual &divide; baseline.</div>
+        <table>
+          <tr><th>Batch</th><th>Product</th><th>Reactor</th><th>Baseline</th><th>Actual</th><th>Index</th><th>Status</th></tr>
+          <tr class="row status-normal"><td>B-0192</td><td>Dye Intermediate A</td><td>R-1</td><td>410 kWh</td><td>435 kWh</td><td class="idx">1.06&times;</td><td><span class="pill normal">Normal</span></td></tr>
+          <tr class="row status-normal"><td>B-0193</td><td>Dye Intermediate A</td><td>R-2</td><td>455 kWh</td><td>496 kWh</td><td class="idx">1.09&times;</td><td><span class="pill normal">Normal</span></td></tr>
+          <tr class="row status-flagged"><td>B-0194</td><td>Agro Intermediate C</td><td>R-3</td><td>520 kWh</td><td>681 kWh</td><td class="idx">1.31&times;</td><td><span class="pill flagged">Flagged</span></td></tr>
+          <tr class="row status-watch"><td>B-0195</td><td>Dye Intermediate B</td><td>R-1</td><td>480 kWh</td><td>538 kWh</td><td class="idx">1.12&times;</td><td><span class="pill watch">Watch</span></td></tr>
+          <tr class="row status-normal"><td>B-0196</td><td>Dye Intermediate A</td><td>R-2</td><td>430 kWh</td><td>460 kWh</td><td class="idx">1.07&times;</td><td><span class="pill normal">Normal</span></td></tr>
+          <tr class="row status-watch"><td>B-0197</td><td>Specialty Pigment D</td><td>R-4</td><td>500 kWh</td><td>610 kWh</td><td class="idx">1.22&times;</td><td><span class="pill watch">Watch</span></td></tr>
+          <tr class="row status-flagged"><td>B-0198</td><td>Agro Intermediate C</td><td>R-3</td><td>520 kWh</td><td>697 kWh</td><td class="idx">1.34&times;</td><td><span class="pill flagged">Flagged</span></td></tr>
+          <tr class="row status-watch"><td>B-0199</td><td>Dye Intermediate B</td><td>R-1</td><td>470 kWh</td><td>517 kWh</td><td class="idx">1.10&times;</td><td><span class="pill watch">Watch</span></td></tr>
+          <tr class="row status-normal"><td>B-0200</td><td>Dye Intermediate A</td><td>R-2</td><td>440 kWh</td><td>462 kWh</td><td class="idx">1.05&times;</td><td><span class="pill normal">Normal</span></td></tr>
+        </table>
+      </div>
+      <div>
+        <h2>What to fix next</h2>
+        <div class="sec-sub">Generated from the batches above.</div>
+        <div class="rec high"><div class="rec-title">Reactor 3 &mdash; check reflux and jacket insulation</div><div class="rec-body">B-0194 and B-0198 both ran 31&ndash;34% above baseline. Two batches, one reactor, one product.</div></div>
+        <div class="rec"><div class="rec-title">Reactor 4 &mdash; review dryer air circulation</div><div class="rec-body">B-0197 sits in the watch zone at 1.22&times;.</div></div>
+        <div class="rec"><div class="rec-title">Reactor 1 &mdash; inspect condensate return</div><div class="rec-body">B-0195 and B-0199 both trending into the watch zone.</div></div>
+        <div class="emit"><div class="emit-num">301 kg CO&#8322;e</div><div class="emit-label">Avoidable across these 9 batches if brought to baseline.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOW IT WORKS VIEW ============ -->
+  <div class="view" id="view-how">
+    <h2>The pipeline</h2>
+    <div class="sec-sub">Three distinct stages &mdash; only the middle one is where learning happens.</div>
+    <div class="pipeline">
+      <div class="stage physics"><div class="stage-eyebrow">STAGE 1 &middot; DETERMINISTIC</div><div class="stage-title">Physics baseline</div><div class="stage-body">Q=m&middot;Cp&middot;&Delta;T and Q_reb=(R+1)D&lambda; give the theoretical minimum. No learning here.</div></div>
+      <div class="stage"><div class="stage-eyebrow">STAGE 2 &middot; HIERARCHICAL REGRESSION</div><div class="stage-title">Expected-baseline model</div><div class="stage-body">Adjusts for ambient temperature, equipment fouling and product &mdash; pooled across the cluster, re-weighted toward plant-specific data over time.</div></div>
+      <div class="stage anomaly"><div class="stage-eyebrow">STAGE 3 &middot; CONTROL LIMITS</div><div class="stage-title">Residual &amp; anomaly flag</div><div class="stage-body">Actual minus expected, checked against a statistical control limit for that reactor+product.</div></div>
+      <div class="stage cluster"><div class="stage-eyebrow">STAGE 4 &middot; GROUPING</div><div class="stage-title">Pattern surfaced</div><div class="stage-body">Flagged batches grouped by reactor/shift/product reveal the recurring cause.</div></div>
+    </div>
+
+    <div class="example">
+      <div>
+        <h2 style="margin-top:10px;">Why Batch B-0198 was actually flagged</h2>
+        <div class="compare-row"><div class="compare-label"><span>Theoretical minimum</span><span>520 kWh</span></div><div class="compare-track"><div class="compare-fill" style="width:63%;background:var(--mute);">520 kWh</div></div></div>
+        <div class="compare-row"><div class="compare-label"><span>ML-expected value</span><span>594 kWh</span></div><div class="compare-track"><div class="compare-fill" style="width:72%;background:var(--teal);">594 kWh</div></div></div>
+        <div class="compare-row"><div class="compare-label"><span>Actual measured</span><span>697 kWh</span></div><div class="compare-track"><div class="compare-fill" style="width:100%;background:var(--red);">697 kWh</div></div></div>
+        <div class="sec-sub" style="margin:16px 0 10px;">What explains the gap</div>
+        <div class="attrib-row"><div class="attrib-label">Ambient temperature</div><div class="attrib-track"><div class="attrib-fill" style="width:18%;background:var(--lime);"></div></div><div class="attrib-val">+13 kWh</div></div>
+        <div class="attrib-row"><div class="attrib-label">Reactor 3 fouling trend</div><div class="attrib-track"><div class="attrib-fill" style="width:58%;background:var(--amber);"></div></div><div class="attrib-val">+61 kWh</div></div>
+        <div class="attrib-row"><div class="attrib-label">Unexplained residual</div><div class="attrib-track"><div class="attrib-fill" style="width:100%;background:var(--red);"></div></div><div class="attrib-val">+103 kWh</div></div>
+        <div class="verdict"><b>Flagged, not just measured:</b> 74 of the 177 kWh above minimum is explainable (ambient + known wear). The remaining 103 kWh is what actually trips the control limit.</div>
+      </div>
+      <div class="model-card">
+        <h3>Model status for this plant</h3>
+        <div class="mrow"><span>Model type</span><span>Hierarchical (partial-pooling) regression</span></div>
+        <div class="mrow"><span>Anomaly method</span><span>Control limits (EWMA)</span></div>
+        <div class="mrow"><span>Training data</span><span>9 plant + 340 pooled</span></div>
+        <div class="mrow"><span>Anomaly score</span><span>0.82 / flagged at 0.65</span></div>
+        <div class="maturity">
+          <div class="maturity-label">Model confidence &mdash; improves as this plant logs more batches</div>
+          <div class="maturity-track"><div class="maturity-fill" style="width:38%;"></div></div>
+          <div class="maturity-note">Weighted mostly toward pooled cluster data today; shifts toward this plant's own history as its batch count grows.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TRY IT VIEW ============ -->
+  <div class="view" id="view-try">
+    <h2>Run the actual baseline engine</h2>
+    <div class="sec-sub">These are the same two equations from the deck, computing live &mdash; enter your own numbers.</div>
+
+    <div class="calc-wrap">
+      <div>
+        <div class="op-toggle">
+          <button class="op-btn active" data-op="reactor">Reactor Heating</button>
+          <button class="op-btn" data-op="distill">Distillation (Reflux)</button>
+        </div>
+
+        <div id="fields-reactor">
+          <div class="field"><label>Mass, m (kg)</label><input type="number" id="r_m" value="2000"></div>
+          <div class="field"><label>Specific heat, Cp (kJ/kg&middot;K)</label><input type="number" id="r_cp" value="3.5" step="0.1"></div>
+          <div class="field"><label>Temperature rise, &Delta;T (K)</label><input type="number" id="r_dt" value="60"></div>
+          <div class="field"><label>Actual measured energy (kJ)</label><input type="number" id="r_actual" value="510000"></div>
+        </div>
+        <div id="fields-distill" style="display:none;">
+          <div class="field"><label>Reflux ratio, R</label><input type="number" id="d_r" value="2.5" step="0.1"></div>
+          <div class="field"><label>Distillate, D (kg)</label><input type="number" id="d_d" value="300"></div>
+          <div class="field"><label>Latent heat, &lambda; (kJ/kg)</label><input type="number" id="d_lambda" value="1100"></div>
+          <div class="field"><label>Actual measured energy (kJ)</label><input type="number" id="d_actual" value="1815000"></div>
+        </div>
+        <button class="calc-btn" onclick="runCalc()">Calculate baseline &amp; check deviation</button>
+      </div>
+
+      <div class="result-panel" id="result-panel">
+        <div class="result-placeholder">Enter values and click Calculate to see the baseline, the deviation, and whether this would be flagged.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ChemTwin prototype &mdash; Schneider Electric Yuva Yodha Tech Energy Hackathon, Smart Manufacturing track. Dashboard and worked-example figures are synthetic and illustrative; the calculator above runs the real physics equations on whatever you enter. Real plant integration is the next-stage build.</footer>
+</div>
+
+<script>
+  document.querySelectorAll('.tabbtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('view-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  let currentOp = 'reactor';
+  document.querySelectorAll('.op-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.op-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentOp = btn.dataset.op;
+      document.getElementById('fields-reactor').style.display = currentOp === 'reactor' ? 'block' : 'none';
+      document.getElementById('fields-distill').style.display = currentOp === 'distill' ? 'block' : 'none';
+      document.getElementById('result-panel').innerHTML = '<div class="result-placeholder">Enter values and click Calculate to see the baseline, the deviation, and whether this would be flagged.</div>';
+    });
+  });
+
+  function runCalc() {
+    let baseline, actual, label;
+    if (currentOp === 'reactor') {
+      const m = parseFloat(document.getElementById('r_m').value) || 0;
+      const cp = parseFloat(document.getElementById('r_cp').value) || 0;
+      const dt = parseFloat(document.getElementById('r_dt').value) || 0;
+      baseline = m * cp * dt;
+      actual = parseFloat(document.getElementById('r_actual').value) || 0;
+      label = 'Q = m&middot;Cp&middot;&Delta;T';
+    } else {
+      const R = parseFloat(document.getElementById('d_r').value) || 0;
+      const D = parseFloat(document.getElementById('d_d').value) || 0;
+      const lambda = parseFloat(document.getElementById('d_lambda').value) || 0;
+      baseline = (R + 1) * D * lambda;
+      actual = parseFloat(document.getElementById('d_actual').value) || 0;
+      label = 'Q_reb = (R+1)&middot;D&middot;&lambda;';
+    }
+    const devPct = baseline > 0 ? ((actual - baseline) / baseline * 100) : 0;
+    let status, statusColor, statusBg, rec;
+    if (devPct < 10) { status = 'Normal'; statusColor='#3E6B49'; statusBg='var(--lime-bg)'; rec = 'No action needed \u2014 within expected range for this equipment.'; }
+    else if (devPct < 20) { status = 'Watch'; statusColor='#8A5A15'; statusBg='var(--amber-bg)'; rec = 'Worth a check next campaign, not urgent \u2014 track whether this recurs.'; }
+    else { status = 'Flagged'; statusColor='#93381A'; statusBg='var(--red-bg)'; rec = currentOp === 'reactor' ? 'Check jacket insulation and steam supply pressure for this reactor.' : 'Check reflux ratio setpoint and reboiler/condenser condition.'; }
+
+    document.getElementById('result-panel').innerHTML = `
+      <div style="font-size:11px;color:var(--mute);margin-bottom:6px;">Baseline (${label})</div>
+      <div class="result-num" style="color:var(--deep);">${Math.round(baseline).toLocaleString()} kJ</div>
+      <div style="font-size:11px;color:var(--mute);margin:14px 0 6px;">Actual entered</div>
+      <div class="result-num" style="color:var(--amber);font-size:26px;">${Math.round(actual).toLocaleString()} kJ</div>
+      <div style="margin-top:16px;">
+        <span class="result-status" style="background:${statusBg};color:${statusColor};">${status} \u2014 ${devPct >= 0 ? '+' : ''}${devPct.toFixed(1)}% vs. baseline</span>
+      </div>
+      <div style="font-size:12px;color:var(--ink);margin-top:8px;line-height:1.5;">${rec}</div>
+    `;
+  }
+</script>
+</body>
+</html>
